@@ -1,2 +1,2 @@
 # Animation
-Some helpful tools for animation programming
+Some implmentations of animation related programming
