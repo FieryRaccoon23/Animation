@@ -20,6 +20,7 @@
 #include <iostream>
 
 #include "CubicSpline.h"
+#include "IMGUIInterface.h"
 
 Eigen::MatrixXd Vertices;
 Eigen::MatrixXi Faces;
@@ -34,6 +35,8 @@ Eigen::Vector3d p2(0.3, 0.5, 0.0);
 Eigen::Vector3d p3(0.8, 0.3, 0.0);
 Eigen::Vector3d p4(1.0, 1.0, 0.0);
 
+igl::opengl::glfw::Viewer viewer;
+
 Eigen::Vector3d GetPointOnSpline(double parameter)
 {
     BezierSpline b(1);
@@ -41,7 +44,7 @@ Eigen::Vector3d GetPointOnSpline(double parameter)
     return b.CalculateValueAt(parameter);
 }
 
-void DisplayPoints(igl::opengl::glfw::Viewer& viewer)
+void DisplaySpline()
 {
     // Draw points
     viewer.data().BeginDrawingPoints(4);
@@ -76,12 +79,52 @@ void DisplayPoints(igl::opengl::glfw::Viewer& viewer)
     
 }
 
+void UpdateControlPoint(GizmoTransformCallbackPayload& payload)
+{
+    Eigen::Vector3d position = Eigen::Vector3d(payload.m_Transform(0, 3), payload.m_Transform(1, 3), payload.m_Transform(2, 3));
+    int controlPoint = payload.m_SelectedControlPoint;
+    Eigen::Vector3d* selectedControlPoint = &p1;
+    if (controlPoint == 0)
+    {
+        selectedControlPoint = &p1;
+    }
+    else if (controlPoint == 1)
+    {
+        selectedControlPoint = &p2;
+    }
+    else if (controlPoint == 2)
+    {
+        selectedControlPoint = &p3;
+    }
+    else if (controlPoint == 3)
+    {
+        selectedControlPoint = &p4;
+    }
+
+    *selectedControlPoint = position;
+
+    DisplaySpline();
+}
+
+//bool PreDrawCallback(igl::opengl::glfw::Viewer& viewer)
+//{
+//
+//    return false;
+//}
+
 int main(int argc, char *argv[])
 {
-    igl::opengl::glfw::Viewer viewer;
-    DisplayPoints(viewer);
+    
+    DisplaySpline();
+
+    IMGUIInterface imguiInterface;
+    imguiInterface.Init(viewer);
+    imguiInterface.InitSplineData(&p1, &p2, &p3, &p4);
+    imguiInterface.m_GizmoTransformCallback = &UpdateControlPoint;
+
     //igl::readOBJ(TUTORIAL_SHARED_PATH "/Hand.obj", Vertices, Faces);
     //viewer.data().set_mesh(Vertices, Faces);
+    //viewer.callback_pre_draw = &PreDrawCallback;
     viewer.core().camera_zoom = 0.5;
     viewer.launch();
 
