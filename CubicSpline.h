@@ -11,12 +11,14 @@ public:
 	virtual ~CubicCurve() = default;
 
 	Eigen::Vector3d  CalculateValueAt(const Eigen::MatrixXd& curveMatrix, double parameter);
-	void		     SetControlPoints(const Eigen::Vector3d& p1, const Eigen::Vector3d& p2, const Eigen::Vector3d& p3, const Eigen::Vector3d& p4);
+	void		     SetControlPoints(Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3, Eigen::Vector3d& p4);
+	Eigen::Vector3d*  GetControlPoint(int i) const;
+	
 	virtual double   CurveDistance() const { return 0.0; }
 	
 protected:
 	Eigen::MatrixXd				    m_Parameters;
-	std::vector<Eigen::Vector3d>	m_ControlPoints;
+	std::vector<Eigen::Vector3d*>	m_ControlPoints;
 	std::vector<Eigen::Vector3d>    m_CalculatedPoints;
 };
 
@@ -33,11 +35,13 @@ template<typename CurveType>
 class CubicSpline
 {
 public:
-	CubicSpline(int numberOfCurves);
+	CubicSpline();
 	virtual ~CubicSpline() = default;
 
 	Eigen::Vector3d CalculateValueAt(double parameter);
-	void		    SetControlPoints(int index, const Eigen::Vector3d& p1, const Eigen::Vector3d& p2, const Eigen::Vector3d& p3, const Eigen::Vector3d& p4);
+	void			AddControlPoints(std::vector<Eigen::Vector3d>& points);
+	void			AppendControlPoint(Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3);
+	void		    SetControlPoints(Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3, Eigen::Vector3d& p4);
 
 protected:
 	std::vector<std::shared_ptr<CurveType>> m_CubicCurves;
@@ -48,7 +52,7 @@ protected:
 class BezierSpline final : public CubicSpline<BezierCurve>
 {
 public:
-	BezierSpline(int numberOfCurves) : CubicSpline<BezierCurve>(numberOfCurves)
+	BezierSpline() : CubicSpline<BezierCurve>()
 	{
 		this->m_CurveMatrix <<  1.0, 0.0, 0.0, 0.0,
 							   -3.0, 3.0, 0.0, 0.0, 
@@ -62,7 +66,7 @@ public:
 class BasisSpline final : public CubicSpline<BezierCurve>
 {
 public:
-	BasisSpline(int numberOfCurves) : CubicSpline<BezierCurve>(numberOfCurves)
+	BasisSpline() : CubicSpline<BezierCurve>()
 	{
 		this->m_CurveMatrix << 1.0, 4.0, 1.0, 0.0,
 							  -3.0, 0.0, 3.0, 0.0,

@@ -1,28 +1,52 @@
 ////////////////// Splines //////////////////
 template<typename CurveType>
-inline CubicSpline<CurveType>::CubicSpline(int numberOfCurves)
+inline CubicSpline<CurveType>::CubicSpline()
 {
-	for (int i = 0; i < numberOfCurves; ++i)
-	{
-		this->m_CubicCurves.push_back(std::make_shared<CurveType>());
-	}
 	this->m_CurveMatrix.resize(4, 4);
+	
 }
 
 template<typename CurveType>
-void CubicSpline<CurveType>::SetControlPoints(int index, const Eigen::Vector3d& p1, const Eigen::Vector3d& p2, const Eigen::Vector3d& p3, const Eigen::Vector3d& p4)
+inline void CubicSpline<CurveType>::AddControlPoints(std::vector<Eigen::Vector3d>& points)
 {
-	if (index >= m_CubicCurves.size())
+	if (controlPoints.size() < 4)
 	{
 		// error
 		return;
 	}
 
-	m_CubicCurves[index]->SetControlPoints(p1, p2, p3, p4);
+	int numberOfCurves = 1 + ((controlPoints.size() - 4) / 3);
+
+	int pointCount = 0;
+	for (int i = 0; i < numberOfCurves; ++i)
+	{
+		this->m_CubicCurves.push_back(std::make_shared<CurveType>());
+
+		int p1 = pointCount;
+		int p2 = ++pointCount;
+		int p3 = ++pointCount;
+		int p4 = ++pointCount;
+
+		SetControlPoints(points[p1], points[p2], points[p3], points[p4]);
+	}
+
 }
 
 template<typename CurveType>
-Eigen::Vector3d CubicSpline<CurveType>::CalculateValueAt(double parameter)
+inline void CubicSpline<CurveType>::AppendControlPoint(Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3)
+{
+	this->m_CubicCurves.push_back(std::make_shared<CurveType>());
+	SetControlPoints(*this->m_CubicCurves[this->m_CubicCurves.size() - 2]->GetControlPoint(3), p1, p2, p3);
+}
+
+template<typename CurveType>
+inline void CubicSpline<CurveType>::SetControlPoints(Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3, Eigen::Vector3d& p4)
+{
+	this->m_CubicCurves[this->m_CubicCurves.size() - 1]->SetControlPoints(p1, p2, p3, p4);
+}
+
+template<typename CurveType>
+inline Eigen::Vector3d CubicSpline<CurveType>::CalculateValueAt(double parameter)
 {
 	if (parameter > 1.0)
 	{
@@ -44,7 +68,7 @@ Eigen::Vector3d CubicSpline<CurveType>::CalculateValueAt(double parameter)
 		splineLength += m_CubicCurves[i]->CurveDistance();
 	}
 
-	double actualLength = parameter * splineLength;
+	double lengthOfParameter = parameter * splineLength;
 
 	/// <Note>
 	/// Create a map to save and access values quickly
@@ -56,14 +80,23 @@ Eigen::Vector3d CubicSpline<CurveType>::CalculateValueAt(double parameter)
 	{
 		localCurveLength = m_CubicCurves[i]->CurveDistance();
 		currentLength += localCurveLength;
-		if (actualLength <= currentLength)
+		// NOTE: check using epsilon
+		if (lengthOfParameter < currentLength)
 		{
+			currentLength -= localCurveLength;
+			lengthOfParameter -= currentLength;
 			break;
 		}
 		++curveIndex;
 	}
 
-	double localParameter = actualLength / localCurveLength;
+	double localParameter = lengthOfParameter / localCurveLength;
+
+	if (curveIndex == this->m_CubicCurves.size())
+	{
+		--curveIndex;
+		localParameter = 1.0;
+	}
 
 	return this->m_CubicCurves[curveIndex]->CalculateValueAt(this->m_CurveMatrix, localParameter);
 }

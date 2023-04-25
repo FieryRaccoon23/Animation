@@ -9,51 +9,37 @@ void IMGUIInterface::Init(igl::opengl::glfw::Viewer& viewer)
 	m_Gizmo.visible = true;
 	m_Gizmo.operation = ImGuizmo::TRANSLATE;
 
-    viewer.callback_key_pressed = [&](decltype(viewer)&, unsigned int key, int mod)
-    {
-        return this->KeyDownCallback(viewer, key, mod);
-    };
-
     m_Gizmo.callback = [&](const Eigen::Matrix4f& T)
     {
         GizmoTransformCallback(T);
     };
 }
 
-void IMGUIInterface::InitSplineData(const Eigen::Vector3d* p1, const Eigen::Vector3d* p2, const Eigen::Vector3d* p3, const Eigen::Vector3d* p4)
+void IMGUIInterface::InitSplineData(const std::vector<Eigen::Vector3d>& controlPoints)
 {
-    m_SplineControlPoints.push_back(p1);
-    m_SplineControlPoints.push_back(p2);
-    m_SplineControlPoints.push_back(p3);
-    m_SplineControlPoints.push_back(p4);
+    m_SplineControlPoints = &controlPoints;
 
-    SetTransformToPoint(m_Gizmo.T, p1);
+    SetTransformToPoint(m_Gizmo.T, m_SplineControlPoints->at(0));
 
-    m_InitialTransform = Eigen::Matrix4f::Identity();
-    SetTransformToPoint(m_InitialTransform, p1);
+    //m_InitialTransform = Eigen::Matrix4f::Identity();
+    //SetTransformToPoint(m_InitialTransform, p1);
 }
 
 void IMGUIInterface::UpdateGizmoToSelectedPoint()
 {
-    SetTransformToPoint(m_Gizmo.T, m_SplineControlPoints[m_SelectedControlPoint]);
+    SetTransformToPoint(m_Gizmo.T, m_SplineControlPoints->at(m_SelectedControlPoint));
 }
 
-bool IMGUIInterface::KeyDownCallback(igl::opengl::glfw::Viewer& viewer, unsigned char key, int mods)
+void IMGUIInterface::IncrementSelectedControlPointIndex()
 {
-    switch (key)
-    {
-    case 'N':
-    case 'n':
-        m_SelectedControlPoint = m_SelectedControlPoint == 3 ? 0 : ++m_SelectedControlPoint;
-        UpdateGizmoToSelectedPoint();
-        return true;
-    case 'P':
-    case 'p':
-        m_SelectedControlPoint = m_SelectedControlPoint == 0 ? 3 : --m_SelectedControlPoint;
-        UpdateGizmoToSelectedPoint();
-        return true;
-    }
-    return false;
+    m_SelectedControlPoint = m_SelectedControlPoint == 3 ? 0 : ++m_SelectedControlPoint;
+    UpdateGizmoToSelectedPoint();
+}
+
+void IMGUIInterface::DecrementSelectedControlPointIndex()
+{
+    m_SelectedControlPoint = m_SelectedControlPoint == 0 ? 3 : --m_SelectedControlPoint;
+    UpdateGizmoToSelectedPoint();
 }
 
 void IMGUIInterface::GizmoTransformCallback(const Eigen::Matrix4f& T)
@@ -67,11 +53,11 @@ void IMGUIInterface::GizmoTransformCallback(const Eigen::Matrix4f& T)
     }
 }
 
-void IMGUIInterface::SetTransformToPoint(Eigen::Matrix4f& T, const Eigen::Vector3d* point)
+void IMGUIInterface::SetTransformToPoint(Eigen::Matrix4f& T, const Eigen::Vector3d& point)
 {
-    T(0, 3) = point->x();
-    T(1, 3) = point->y();
-    T(2, 3) = point->z();
+    T(0, 3) = point.x();
+    T(1, 3) = point.y();
+    T(2, 3) = point.z();
 }
 
 const Eigen::Vector3d IMGUIInterface::GetGizmoPosition() const
