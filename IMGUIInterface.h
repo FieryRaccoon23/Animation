@@ -22,7 +22,6 @@ public:
 	std::function<void(GizmoTransformCallbackPayload&)> m_GizmoTransformCallback;
 
 private:
-	//bool KeyDownCallback(igl::opengl::glfw::Viewer& viewer, unsigned char key, int mods);
 	void GizmoTransformCallback(const Eigen::Matrix4f& T);
 	void SetTransformToPoint(Eigen::Matrix4f& T, const Eigen::Vector3d& point);
 	void UpdateGizmoToSelectedPoint();
@@ -30,6 +29,5 @@ private:
 	igl::opengl::glfw::imgui::ImGuiPlugin m_ImguiPlugin;
 	igl::opengl::glfw::imgui::ImGuizmoWidget m_Gizmo;
 	const std::vector<Eigen::Vector3d>* m_SplineControlPoints;
-	//Eigen::Matrix4f m_InitialTransform;
 	int m_SelectedControlPoint = 0;
 };

@@ -3,7 +3,6 @@ template<typename CurveType>
 inline CubicSpline<CurveType>::CubicSpline()
 {
 	this->m_CurveMatrix.resize(4, 4);
-	
 }
 
 template<typename CurveType>

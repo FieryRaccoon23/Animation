@@ -64,17 +64,25 @@ Eigen::Vector3d GetPointOnSpline(double parameter)
 void DisplaySpline()
 {
     // Draw points
+    int controls = 0;
     viewer.data().BeginDrawingPoints(controlPoints.size());
     for (int i = 0; i < controlPoints.size(); ++i)
     {
-        viewer.data().SetPoints(controlPoints[i], kColorGreen);
+        Eigen::RowVector3d color = kColorGreen;
+        if (i % 3 == 0)
+        {
+            color = kColorBlue;
+            ++controls;
+        }
+        viewer.data().SetPoints(controlPoints[i], color);
     }
     viewer.data().EndDrawingPoints();
     viewer.data().point_size = 10;
 
     // Draw lines
-    int count = 20;
-    viewer.data().BeginDrawingLines(count /*+ 2*/);
+    int count = 20; // resolution
+    int tangents = (2 * (controls - 1));
+    viewer.data().BeginDrawingLines(count + tangents);
 
     Eigen::Vector3d start = GetPointOnSpline(0.0);
     Eigen::Vector3d end;
@@ -86,8 +94,25 @@ void DisplaySpline()
         start = end;
     }
 
-    //viewer.data().SetLines(p1, p2, kColorPink);
-    //viewer.data().SetLines(p4, p3, kColorPink);
+    Eigen::Vector3d previousPoint = controlPoints[0];
+    viewer.data().SetLines(previousPoint, controlPoints[1], kColorPink);
+    
+    for (int i = 2; i < controlPoints.size(); ++i)
+    {
+        if (i % 3 == 0)
+        {
+            viewer.data().SetLines(previousPoint, controlPoints[i], kColorPink);
+    
+            int nextPointIndex = i + 1;
+            if (nextPointIndex < controlPoints.size())
+            {
+                Eigen::Vector3d nextPoint = controlPoints[nextPointIndex];
+                viewer.data().SetLines(controlPoints[i], nextPoint, kColorPink);
+            }
+        }
+    
+        previousPoint = controlPoints[i];
+    }
 
     viewer.data().EndDrawingLines();
     viewer.data().line_width = 2;

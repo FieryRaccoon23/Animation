@@ -20,9 +20,6 @@ void IMGUIInterface::InitSplineData(const std::vector<Eigen::Vector3d>& controlP
     m_SplineControlPoints = &controlPoints;
 
     SetTransformToPoint(m_Gizmo.T, m_SplineControlPoints->at(0));
-
-    //m_InitialTransform = Eigen::Matrix4f::Identity();
-    //SetTransformToPoint(m_InitialTransform, p1);
 }
 
 void IMGUIInterface::UpdateGizmoToSelectedPoint()
@@ -32,13 +29,13 @@ void IMGUIInterface::UpdateGizmoToSelectedPoint()
 
 void IMGUIInterface::IncrementSelectedControlPointIndex()
 {
-    m_SelectedControlPoint = m_SelectedControlPoint == 3 ? 0 : ++m_SelectedControlPoint;
+    m_SelectedControlPoint = m_SelectedControlPoint == m_SplineControlPoints->size() - 1 ? 0 : ++m_SelectedControlPoint;
     UpdateGizmoToSelectedPoint();
 }
 
 void IMGUIInterface::DecrementSelectedControlPointIndex()
 {
-    m_SelectedControlPoint = m_SelectedControlPoint == 0 ? 3 : --m_SelectedControlPoint;
+    m_SelectedControlPoint = m_SelectedControlPoint == 0 ? m_SplineControlPoints->size() - 1 : --m_SelectedControlPoint;
     UpdateGizmoToSelectedPoint();
 }
 
